@@ -16,18 +16,18 @@ I consider it as an introduction to ret2libc and ROP chains.
 &nbsp;
 ## Information Gathering
 
-First of all, i had to find necessary informations about the executable and its lib.
+First of all, i needed to find necessary informations about the executable and its lib.
 
-The ELF is a x64, with NX and Canay enabled. Consider that the PIE is disabled. 
+The ELF is x64, with NX and Canary enabled. Note that PIE is disabled.
 
-With the PIE disabled, the function's addresses doesn't change from an execution to another. 
-We will have to deal with Canary, take it in note for later. 
+With PIE disabled, the function addresses don't change between executions.
+We will need to deal with the Canary, so let's keep that in mind for later.
 
   ![ELF_CHECKSEC](https://github.com/Lixhr/HackTheBox/blob/main/PWN/easy/bad_grades/attachments/elf_checksec.png?raw=true)
 
 
-Consider that PIE is enabled on the libc. 
-So we need to leak its base address in order to execute system()
+Note that PIE is enabled on the libc.
+So, we need to leak its base address in order to execute system().
 
   ![LIBC](https://github.com/Lixhr/HackTheBox/blob/main/PWN/easy/bad_grades/attachments/libc_checksec.png?raw=true)
   
@@ -42,14 +42,14 @@ When creating an average, the user inputs a *number of grades*, then fills the n
 ## Reversing the binary  
 
 
-Let's ask Ghidra to decompile the binary and see what's under the hood.
+Let's ask Ghidra to decompile the binary and see what's happening behind the scenes.
 
 There are three main functions.
-- menu(), that redirects the user in the two functions below. 
-- view_grades(), that displays arbitrary grades. Nothing intresting found here.
+- menu(), which redirects the user in the two functions below. 
+- view_grades(), which displays arbitrary grades. Nothing intresting found here.
 - new_grades() , asking the user for his grades.
 
-The main problem is in new_grades(). Let's clean it up and analyze it.
+The main issue lies within `new_grades()`. Let's clean it up and analyze it.
 
         void    new_grades(void)
         {
@@ -74,31 +74,29 @@ The main problem is in new_grades(). Let's clean it up and analyze it.
                 __stack_chk_fail();
             return;
         }
-All the grades are stored in dbl_array[33], but no validations are made on the user input.
-
-It obviously leads to a stack buffer overflow. 
+All the grades are stored in dbl_array[33], but there is no input validation.
+This obviously leads to a stack buffer overflow. 
 Let's try to override the buffer with 34 entries
 
 
 
   ![CANARY](https://github.com/Lixhr/HackTheBox/blob/main/PWN/easy/bad_grades/attachments/canary.png?raw=true)
 
-Here is our stack canary, just after our array. And now?
+Here is our stack canary, just after our array. So what now?
 &nbsp;
 ## Bypassing canary
 
-I first tried to bruteforce the canary's value, but it took long time. 
-It was frustrating to wait before every try of my exploit.
+I first tried to bruteforce the canary's value, but it was taking too long.
 
-I finally found a way to make scanf a "ghost" read, by justt passing a ".".
-There is no integer, nor decimal. Nothing is written and our canary is still here.
+I finally found a way to make scanf a "ghost" read, by just passing a ".".
+This means that no integer or decimal value is written, and our canary remains intact.
 
 - https://ir0nstone.gitbook.io/notes/misc/scanf-bypasses
 &nbsp;
 ## Finding the rip offset
 
 We can write arbitrary data on the stack. 
-We now want to override rip value with our beautiful "AAAAAAAA"
+We now want to override rip value with our "AAAAAAAA"
 
 But, we first need to convert our address to its float representation:
 
