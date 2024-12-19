@@ -144,27 +144,6 @@ Let's call puts@plt, and leak the puts@got. We need a little cleaning on the add
 ![address](./attachments/address.png?raw=true)
 
 The hard work is done. The program asks us to re-overflow it.
-## Finding the rip offset
-
-We can write arbitrary data on the stack. We now want to override rip value with our beautiful "AAAAAAAA"
-
-But, we first need to convert our address to its float representation:
-
-    def pointer_to_double(pointer_value):
-        byte_string = p64(pointer_value)
-        hex_str = binascii.hexlify(byte_string)
-        byte_data = binascii.unhexlify(hex_str)
-        x = struct.unpack('d', byte_data)
-        return (str(x[0]).encode())
-
-I fuzz the program and saw that the program crashes at EIP=0x41414141414141, with a offset of 34.
-
-Let's do a ret2main to to confirm that we can control the program's flow.
-
-![ret2main](./attachments/ret2main.png?raw=true)
-
-
-Done.
 
 Note that we have an "unlimited" input. We could craft a crazy ROPchain, but keep it simple. Let's call system("/bin/sh")
 
