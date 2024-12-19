@@ -4,7 +4,7 @@
 *"You are not interested in studying for school anymore, you only play CTFs and ?challenges! Your grades fell off a cliff! I will take your laptop away if you continue like this". You need to do something to raise them before your parents ground you forever.."*
 
 
-![PWNED](https://raw.githubusercontent.com/Lixhr/HackTheBox/refs/heads/main/PWN/easy/bad_grades/attachments/has_been_pwned.png)
+![PWNED](./attachments/has_been_pwned.png)
 
 "Bad grades" is an easy-level binary exploitation box. Given an ELF and his linked libc.so, i had to find a way to control the program's execution flow. 
 
@@ -20,18 +20,18 @@ The ELF is a x64, with NX and Canay enabled. Consider that the PIE is disabled.
 With the PIE disabled, the function's addresses doesn't change from an execution to another. 
 We will have to deal with Canary, take it in note for later. 
 
-  ![ELF_CHECKSEC](https://github.com/Lixhr/HackTheBox/blob/main/PWN/easy/bad_grades/attachments/elf_checksec.png?raw=true)
+  ![ELF_CHECKSEC](./attachments/elf_checksec.png?raw=true)
 
 
 Consider that PIE is enabled on the libc. So we need to leak its base address in order to execute system()
 
-  ![LIBC](https://github.com/Lixhr/HackTheBox/blob/main/PWN/easy/bad_grades/attachments/libc_checksec.png?raw=true)
+  ![LIBC](./attachments/libc_checksec.png?raw=true)
   
 The program is quite simple. The student can view his grades, or create a new average.
 
 When creating an average, the user inputs a *number of grades*, then fills the notes one by one.
 
-  ![PROGRAM_OVERVIEW](https://github.com/Lixhr/HackTheBox/blob/main/PWN/easy/bad_grades/attachments/program_screen.png?raw=true)
+  ![PROGRAM_OVERVIEW](./attachments/program_screen.png?raw=true)
 
 
 ## Reversing the binary
@@ -73,7 +73,7 @@ It obviously leads to a stack buffer overflow. Let's try to override the buffer 
 
 
 
-  ![CANARY](https://github.com/Lixhr/HackTheBox/blob/main/PWN/easy/bad_grades/attachments/canary.png?raw=true)
+  ![CANARY](./attachments/canary.png?raw=true)
 
 Here is our stack canary, just after our array. And now?
 ## Bypassing canary
@@ -102,7 +102,7 @@ I fuzz the program and saw that the program crashes at EIP=0x41414141414141, wit
 
 Let's do a ret2main to to confirm that we can control the program's flow.
 
-![ret2main](https://github.com/Lixhr/HackTheBox/blob/main/PWN/easy/bad_grades/attachments/ret2main.png?raw=true)
+![ret2main](./attachments/ret2main.png?raw=true)
 
 
 Done.
@@ -114,7 +114,7 @@ Note that we have an "unlimited" input. We could craft a crazy ROPchain, but kee
 ## Leaking the libc address
 
 
-![ret2plt](https://github.com/Lixhr/HackTheBox/blob/main/PWN/easy/bad_grades/attachments/functions.png?raw=true)
+![ret2plt](./attachments/functions.png?raw=true)
 
 Sadly, we don't have system() linked in our executable. Whe have to ret2plt, in order to leak the libc address.
 
@@ -141,7 +141,7 @@ Base address changes at every execution. But the padding between each functions 
 
 Let's call puts@plt, and leak the puts@got. We need a little cleaning on the address to convert it in its decimal representation. Don't forget to return to main.
 
-![address](https://github.com/Lixhr/HackTheBox/blob/main/PWN/easy/bad_grades/attachments/address.png?raw=true)
+![address](./attachments/address.png?raw=true)
 
 The hard work is done. The program asks us to re-overflow it.
 ## Finding the rip offset
@@ -161,7 +161,7 @@ I fuzz the program and saw that the program crashes at EIP=0x41414141414141, wit
 
 Let's do a ret2main to to confirm that we can control the program's flow.
 
-![ret2main](https://github.com/Lixhr/HackTheBox/blob/main/PWN/easy/bad_grades/attachments/ret2main.png?raw=true)
+![ret2main](./attachments/ret2main.png?raw=true)
 
 
 Done.
@@ -193,7 +193,7 @@ Find a "/bin/sh" address on the libc. It is a common gadget.
 
 After pushing it into RDI (1st arg), just execute system(). A shell returns, and asks you to cat flag.
 
-![system](https://github.com/Lixhr/HackTheBox/blob/main/PWN/easy/bad_grades/attachments/final.png?raw=true)
+![system](./attachments/final.png?raw=true)
 
 
 
