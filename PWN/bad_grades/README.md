@@ -178,7 +178,9 @@ After pushing it into RDI (1st arg), just execute system(). A shell returns, and
 
 ## Patch
 
-In order to path this vulnerability, the developper can check that the number of grades fits the buffer size of 33, and return an error on overflow.
+In order to patch this vulnerability, the developper can check that the number of grades fits the buffer size of 33, and return an error on overflow.
+
+Enabling PIE would also be a good practice.
 
     void    new_grades(void)
     {
